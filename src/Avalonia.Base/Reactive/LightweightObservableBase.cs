@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -78,16 +79,26 @@ namespace Avalonia.Reactive
         {
             if (_observers != null)
             {
-                IObserver<T>[] observers;
+                IObserver<T>[] observers = null;
+                int count;
 
-                lock (_observers)
+                try
                 {
-                    observers = _observers.ToArray();
+                    lock (_observers)
+                    {
+                        count = _observers.Count;
+                        observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
+                        _observers.CopyTo(observers);
+                    }
+
+                    for (var i = 0; i < count; ++i)
+                    {
+                        observers[i].OnNext(value);
+                    }
                 }
-
-                foreach (var observer in observers)
+                finally
                 {
-                    observer.OnNext(value);
+                    ArrayPool<IObserver<T>>.Shared.Return(observers);
                 }
             }
         }
@@ -96,17 +107,27 @@ namespace Avalonia.Reactive
         {
             if (_observers != null)
             {
-                IObserver<T>[] observers;
+                IObserver<T>[] observers = null;
+                int count;
 
-                lock (_observers)
+                try
                 {
-                    observers = _observers.ToArray();
-                    _observers = null;
+                    lock (_observers)
+                    {
+                        count = _observers.Count;
+                        observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
+                        _observers.CopyTo(observers);
+                        _observers = null;
+                    }
+
+                    for (var i = 0; i < count; ++i)
+                    {
+                        observers[i].OnCompleted();
+                    }
                 }
-
-                foreach (var observer in observers)
+                finally
                 {
-                    observer.OnCompleted();
+                    ArrayPool<IObserver<T>>.Shared.Return(observers);
                 }
 
                 Deinitialize();
@@ -117,17 +138,27 @@ namespace Avalonia.Reactive
         {
             if (_observers != null)
             {
-                IObserver<T>[] observers;
+                IObserver<T>[] observers = null;
+                int count;
 
-                lock (_observers)
+                try
                 {
-                    observers = _observers.ToArray();
-                    _observers = null;
+                    lock (_observers)
+                    {
+                        count = _observers.Count;
+                        observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
+                        _observers.CopyTo(observers);
+                        _observers = null;
+                    }
+
+                    for (var i = 0; i < count; ++i)
+                    {
+                        observers[i].OnError(error);
+                    }
                 }
-
-                foreach (var observer in observers)
+                finally
                 {
-                    observer.OnError(error);
+                    ArrayPool<IObserver<T>>.Shared.Return(observers);
                 }
 
                 _error = error;
