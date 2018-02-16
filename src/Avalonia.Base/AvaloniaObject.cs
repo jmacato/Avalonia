@@ -13,6 +13,7 @@ using Avalonia.Logging;
 using Avalonia.Threading;
 using Avalonia.Utilities;
 using System.Reactive.Concurrency;
+using Avalonia.Reactive;
 
 namespace Avalonia
 {
@@ -39,7 +40,7 @@ namespace Avalonia
         /// Maintains a list of direct property binding subscriptions so that the binding source
         /// doesn't get collected.
         /// </summary>
-        private List<IDisposable> _directBindings;
+        private List<DirectBindingSubscription> _directBindings;
 
         /// <summary>
         /// Event handler for <see cref="INotifyPropertyChanged"/> implementation.
@@ -353,25 +354,12 @@ namespace Avalonia
                     property, 
                     description);
 
-                IDisposable subscription = null;
-
                 if (_directBindings == null)
                 {
-                    _directBindings = new List<IDisposable>();
+                    _directBindings = new List<DirectBindingSubscription>();
                 }
 
-                subscription = source
-                    .Select(x => CastOrDefault(x, property.PropertyType))
-                    .Do(_ => { }, () => _directBindings.Remove(subscription))
-                    .Subscribe(x => SetDirectValue(property, x));
-
-                _directBindings.Add(subscription);
-
-                return Disposable.Create(() =>
-                {
-                    subscription.Dispose();
-                    _directBindings.Remove(subscription);
-                });
+                return new DirectBindingSubscription(this, property, source);
             }
             else
             {
@@ -907,6 +895,39 @@ namespace Avalonia
         private void ThrowNotRegistered(AvaloniaProperty p)
         {
             throw new ArgumentException($"Property '{p.Name} not registered on '{this.GetType()}");
+        }
+
+        private class DirectBindingSubscription : IObserver<object>, IDisposable
+        {
+            readonly AvaloniaObject _owner;
+            readonly AvaloniaProperty _property;
+            readonly IDisposable _subscription;
+
+            public DirectBindingSubscription(
+                AvaloniaObject owner,
+                AvaloniaProperty property,
+                IObservable<object> source)
+            {
+                _owner = owner;
+                _property = property;
+                _owner._directBindings.Add(this);
+                _subscription = source.Subscribe(this);
+            }
+
+            public void Dispose()
+            {
+                _subscription.Dispose();
+                _owner._directBindings.Remove(this);
+            }
+
+            public void OnCompleted() => Dispose();
+            public void OnError(Exception error) => Dispose();
+
+            public void OnNext(object value)
+            {
+                var castValue = CastOrDefault(value, _property.PropertyType);
+                _owner.SetDirectValue(_property, castValue);
+            }
         }
     }
 }
