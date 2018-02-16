@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Reactive;
-using System.Reactive.Linq;
+using Avalonia.Reactive;
 
 namespace Avalonia.Controls
 {
@@ -55,11 +54,7 @@ namespace Avalonia.Controls
 
         public static IObservable<object> GetResourceObservable(this IResourceNode target, string key)
         {
-            return Observable.FromEventPattern<ResourcesChangedEventArgs>(
-                x => target.ResourcesChanged += x,
-                x => target.ResourcesChanged -= x)
-                .StartWith((EventPattern<ResourcesChangedEventArgs>)null)
-                .Select(x => target.FindResource(key));
+            return new AvaloniaResourceObservable(target, key);
         }
     }
 }
