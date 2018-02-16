@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading.Tasks;
 using Avalonia.Reactive;
 using Xunit;
 
@@ -131,6 +132,55 @@ namespace Avalonia.Base.UnitTests.Reactive
             target.OnNext("bar");
 
             Assert.Equal(new[] { "foo", "foo", "bar" }, result);
+        }
+
+        [Fact]
+        public void Concurrency_Stress_Test()
+        {
+            var rnd = new Random(0);
+
+            void ThreadMain(ISubject<string> subject)
+            {
+                var finished = false;
+                IDisposable subscription = null;
+
+                while (!finished)
+                {
+                    switch (rnd.Next(10))
+                    {
+                        case 0:
+                            if (subscription == null)
+                            {
+                                subscription = subject.Subscribe(
+                                    x => { },
+                                    x => finished = true,
+                                    () => finished = true);
+                            }
+                            break;
+                        case 1:
+                            if (subscription != null)
+                            {
+                                subscription.Dispose();
+                                subscription = null;
+                            }
+                            break;
+                        case 2:
+                            subject.OnNext("foo");
+                            break;
+                        case 3:
+                            subject.OnCompleted();
+                            break;
+                    }
+                }
+            }
+
+            for (var i = 0; i < 100; ++i)
+            {
+                var target = new TestSubject();
+                Task.WaitAll(
+                    Task.Factory.StartNew(() => ThreadMain(target)),
+                    Task.Factory.StartNew(() => ThreadMain(target)));
+            }
         }
 
         public static IEnumerable<object[]> GetTargets()
