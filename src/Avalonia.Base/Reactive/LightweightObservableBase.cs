@@ -18,6 +18,7 @@ namespace Avalonia.Reactive
     /// </remarks>
     public abstract class LightweightObservableBase<T> : IObservable<T>
     {
+        private object _lock = new object();
         private Exception _error;
         private List<IObserver<T>> _observers = new List<IObserver<T>>();
 
@@ -26,24 +27,25 @@ namespace Avalonia.Reactive
             Contract.Requires<ArgumentNullException>(observer != null);
             Dispatcher.UIThread.VerifyAccess();
 
-            if (_observers == null)
+            bool first;
+
+            lock (_lock)
             {
-                if (_error != null)
+                if (_observers == null)
                 {
-                    observer.OnError(_error);
+                    if (_error != null)
+                    {
+                        observer.OnError(_error);
+                    }
+                    else
+                    {
+                        observer.OnCompleted();
+                    }
+
+                    return Disposable.Empty;
                 }
-                else
-                {
-                    observer.OnCompleted();
-                }
 
-                return Disposable.Empty;
-            }
-
-            var first = _observers.Count == 0;
-
-            lock (_observers)
-            {
+                first = _observers.Count == 0;
                 _observers.Add(observer);
             }
 
@@ -58,7 +60,7 @@ namespace Avalonia.Reactive
             {
                 if (_observers != null)
                 {
-                    lock (_observers)
+                    lock (_lock)
                     {
                         _observers?.Remove(observer);
 
@@ -77,26 +79,29 @@ namespace Avalonia.Reactive
 
         protected void PublishNext(T value)
         {
-            if (_observers != null)
-            {
-                IObserver<T>[] observers = null;
-                int count;
+            IObserver<T>[] observers = null;
+            int count = 0;
 
-                try
+            try
+            {
+                lock (_lock)
                 {
-                    lock (_observers)
+                    if (_observers != null)
                     {
                         count = _observers.Count;
                         observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
                         _observers.CopyTo(observers);
                     }
-
-                    for (var i = 0; i < count; ++i)
-                    {
-                        observers[i].OnNext(value);
-                    }
                 }
-                finally
+
+                for (var i = 0; i < count; ++i)
+                {
+                    observers[i].OnNext(value);
+                }
+            }
+            finally
+            {
+                if (observers != null)
                 {
                     ArrayPool<IObserver<T>>.Shared.Return(observers);
                 }
@@ -105,64 +110,68 @@ namespace Avalonia.Reactive
 
         protected void PublishCompleted()
         {
-            if (_observers != null)
-            {
-                IObserver<T>[] observers = null;
-                int count;
+            IObserver<T>[] observers = null;
+            int count = 0;
 
-                try
+            try
+            {
+                lock (_lock)
                 {
-                    lock (_observers)
+                    if (_observers != null)
                     {
                         count = _observers.Count;
                         observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
                         _observers.CopyTo(observers);
                         _observers = null;
                     }
-
-                    for (var i = 0; i < count; ++i)
-                    {
-                        observers[i].OnCompleted();
-                    }
                 }
-                finally
+
+                for (var i = 0; i < count; ++i)
+                {
+                    observers[i].OnCompleted();
+                }
+            }
+            finally
+            {
+                if (observers != null)
                 {
                     ArrayPool<IObserver<T>>.Shared.Return(observers);
+                    Deinitialize();
                 }
-
-                Deinitialize();
             }
         }
 
         protected void PublishError(Exception error)
         {
-            if (_observers != null)
-            {
-                IObserver<T>[] observers = null;
-                int count;
+            IObserver<T>[] observers = null;
+            int count = 0;
 
-                try
+            try
+            {
+                lock (_lock)
                 {
-                    lock (_observers)
+                    if (_observers != null)
                     {
                         count = _observers.Count;
                         observers = ArrayPool<IObserver<T>>.Shared.Rent(count);
                         _observers.CopyTo(observers);
                         _observers = null;
-                    }
-
-                    for (var i = 0; i < count; ++i)
-                    {
-                        observers[i].OnError(error);
+                        _error = error;
                     }
                 }
-                finally
+
+                for (var i = 0; i < count; ++i)
+                {
+                    observers[i].OnError(error);
+                }
+            }
+            finally
+            {
+                if (observers != null)
                 {
                     ArrayPool<IObserver<T>>.Shared.Return(observers);
+                    Deinitialize();
                 }
-
-                _error = error;
-                Deinitialize();
             }
         }
 
