@@ -34,16 +34,16 @@ namespace Avalonia.Controls.Presenters
         private bool _caretBlink;
         private IBrush _highlightBrush;
 
+        static TextPresenter()
+        {
+            AffectsFormattedText(SelectionStartProperty, SelectionEndProperty);
+        }
+
         public TextPresenter()
         {
             _caretTimer = new DispatcherTimer();
             _caretTimer.Interval = TimeSpan.FromMilliseconds(500);
             _caretTimer.Tick += CaretTimerTick;
-
-            Observable.Merge(
-                this.GetObservable(SelectionStartProperty),
-                this.GetObservable(SelectionEndProperty))
-                .Subscribe(_ => InvalidateFormattedText());
 
             this.GetObservable(CaretIndexProperty)
                 .Subscribe(CaretIndexChanged);

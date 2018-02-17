@@ -100,10 +100,8 @@ namespace Avalonia.Controls
         static TextBlock()
         {
             ClipToBoundsProperty.OverrideDefaultValue<TextBlock>(true);
-            AffectsRender(ForegroundProperty);
-            AffectsRender(FontWeightProperty);
-            AffectsRender(FontSizeProperty);
-            AffectsRender(FontStyleProperty);
+            AffectsRender(ForegroundProperty, FontWeightProperty, FontSizeProperty, FontStyleProperty);
+            AffectsFormattedText(TextProperty, TextAlignmentProperty, FontSizeProperty, FontStyleProperty, FontWeightProperty);
         }
 
         /// <summary>
@@ -111,16 +109,6 @@ namespace Avalonia.Controls
         /// </summary>
         public TextBlock()
         {
-            Observable.Merge(
-                this.GetObservable(TextProperty).Select(_ => Unit.Default),
-                this.GetObservable(TextAlignmentProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontSizeProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontStyleProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontWeightProperty).Select(_ => Unit.Default))
-                .Subscribe(_ =>
-                {
-                    InvalidateFormattedText();
-                });
         }
 
         /// <summary>
@@ -402,6 +390,28 @@ namespace Avalonia.Controls
         {
             base.OnAttachedToLogicalTree(e);
             InvalidateFormattedText();
+        }
+
+        /// <summary>
+        /// Indicates that a property change should cause <see cref="InvalidateFormattedText"/> to be
+        /// called.
+        /// </summary>
+        /// <param name="properties">The properties.</param>
+        /// <remarks>
+        /// This method should be called in a control's static constructor with each property
+        /// on the control which when changed should cause a the formatted text to be invalidated.
+        /// </remarks>
+        protected static void AffectsFormattedText(params AvaloniaProperty[] properties)
+        {
+            foreach (var property in properties)
+            {
+                property.Changed.Subscribe(AffectsFormattedTextInvalidate);
+            }
+        }
+
+        private static void AffectsFormattedTextInvalidate(AvaloniaPropertyChangedEventArgs e)
+        {
+            (e.Sender as TextBlock)?.InvalidateFormattedText();
         }
     }
 }
