@@ -90,6 +90,25 @@ namespace Avalonia
         }
 
         /// <summary>
+        /// Gets an observable for a <see cref="AvaloniaProperty"/>.
+        /// </summary>
+        /// <param name="o">The object.</param>
+        /// <typeparam name="T">The type of the property.</typeparam>
+        /// <param name="property">The property.</param>
+        /// <returns>
+        /// An observable which when subscribed pushes the old and new values of the property each
+        /// time it is changed. Note that the observable returned from this method does not fire
+        /// with the current value of the property immediately.
+        /// </returns>
+        public static IObservable<Tuple<T, T>> GetObservableWithHistory<T>(
+            this IAvaloniaObject o,
+            AvaloniaProperty<T> property)
+        {
+            return o.GetPropertyChangedObservable(property)
+                .Select(x => Tuple.Create((T)x.OldValue, (T)x.NewValue));
+        }
+
+        /// <summary>
         /// Gets a subject for a <see cref="AvaloniaProperty"/>.
         /// </summary>
         /// <param name="o">The object.</param>
