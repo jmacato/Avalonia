@@ -44,6 +44,10 @@ namespace Avalonia.Controls.Primitives
         {
             PseudoClass(OrientationProperty, o => o == Orientation.Vertical, ":vertical");
             PseudoClass(OrientationProperty, o => o == Orientation.Horizontal, ":horizontal");
+            MinimumProperty.Changed.Subscribe(CalculateIsVisible);
+            MaximumProperty.Changed.Subscribe(CalculateIsVisible);
+            ViewportSizeProperty.Changed.Subscribe(CalculateIsVisible);
+            VisibilityProperty.Changed.Subscribe(CalculateIsVisible);
         }
 
         /// <summary>
@@ -51,13 +55,6 @@ namespace Avalonia.Controls.Primitives
         /// </summary>
         public ScrollBar()
         {
-            var isVisible = Observable.Merge(
-                this.GetObservable(MinimumProperty).Select(_ => Unit.Default),
-                this.GetObservable(MaximumProperty).Select(_ => Unit.Default),
-                this.GetObservable(ViewportSizeProperty).Select(_ => Unit.Default),
-                this.GetObservable(VisibilityProperty).Select(_ => Unit.Default))
-                .Select(_ => CalculateIsVisible());
-            Bind(IsVisibleProperty, isVisible, BindingPriority.Style);
         }
 
         /// <summary>
@@ -92,23 +89,30 @@ namespace Avalonia.Controls.Primitives
         /// Calculates whether the scrollbar should be visible.
         /// </summary>
         /// <returns>The scrollbar's visibility.</returns>
-        private bool CalculateIsVisible()
+        private void UpdateVisibility()
         {
+            bool value;
+
             switch (Visibility)
             {
                 case ScrollBarVisibility.Visible:
-                    return true;
+                    value = true;
+                    break;
 
                 case ScrollBarVisibility.Disabled:
                 case ScrollBarVisibility.Hidden:
-                    return false;
+                    value = false;
+                    break;
 
                 case ScrollBarVisibility.Auto:
-                    return double.IsNaN(ViewportSize) || Maximum > 0;
+                    value = double.IsNaN(ViewportSize) || Maximum > 0;
+                    break;
 
                 default:
                     throw new InvalidOperationException("Invalid value for ScrollBar.Visibility.");
             }
+
+            SetValue(IsVisibleProperty, value, BindingPriority.Style);
         }
 
         protected override void OnTemplateApplied(TemplateAppliedEventArgs e)
@@ -199,6 +203,14 @@ namespace Avalonia.Controls.Primitives
         private void LargeIncrement()
         {
             Value = Math.Min(Value + LargeChange * ViewportSize, Maximum);
+        }
+
+        private static void CalculateIsVisible(AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Sender is ScrollBar s)
+            {
+                s.UpdateVisibility();
+            }
         }
     }
 }
