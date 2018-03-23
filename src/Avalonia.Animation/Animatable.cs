@@ -5,6 +5,8 @@ using System.Linq;
 using Avalonia.Data;
 using System;
 using System.Reactive.Linq;
+using Avalonia.Animation.Transitions;
+using Avalonia.Collections;
 
 namespace Avalonia.Animation
 {
@@ -16,13 +18,13 @@ namespace Avalonia.Animation
         /// <summary>
         /// 
         /// </summary>
-        public static readonly StyledProperty<Transitions> TransitionsProperty =
-                AvaloniaProperty.Register<Animatable, Transitions>(nameof(Transitions));
+        public static readonly StyledProperty<Transitions.Transitions> TransitionsProperty =
+                AvaloniaProperty.Register<Animatable, Transitions.Transitions>(nameof(Transitions));
 
         /// <summary>
         /// Gets or sets the property transitions for the control.
         /// </summary>
-        public Transitions Transitions
+        public Transitions.Transitions Transitions
         {
             get { return GetValue(TransitionsProperty); }
             set { SetValue(TransitionsProperty, value); }

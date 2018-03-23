@@ -37,7 +37,8 @@ namespace Avalonia.Animation.Easings
                                       .SelectMany(p => p.GetTypes())
                                       .Where(p => p.Namespace == s_thisType.Namespace)
                                       .Where(p => p.IsSubclassOf(s_thisType))
-                                      .Select(p=>p).ToList();
+                                      .Select(p => p)
+                                      .ToList();
 
                 foreach (var easingType in derivedTypes)
                     _easingTypes.Add(easingType.Name, easingType);

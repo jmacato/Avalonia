@@ -1,12 +1,11 @@
 // Copyright (c) The Avalonia Project. All rights reserved.
 // Licensed under the MIT license. See licence.md file in the project root for full license information.
 
+using Avalonia.Threading;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using Avalonia.Data;
-using Avalonia.Threading;
 
 namespace Avalonia.Animation
 {

@@ -97,6 +97,7 @@
         <Compile Remove="**\UriTypeConverter.cs" />
     </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Avalonia.Animation.Shared\Avalonia.Animation.Shared.csproj" />
     <ProjectReference Include="..\..\Avalonia.Animation\Avalonia.Animation.csproj" />
     <ProjectReference Include="..\..\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\..\Avalonia.Controls\Avalonia.Controls.csproj" />

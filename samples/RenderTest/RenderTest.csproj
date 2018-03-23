@@ -76,6 +76,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Avalonia.Animation.Shared\Avalonia.Animation.Shared.csproj">
+      <Project>{0938a227-f67c-4781-a06f-3ef1cf8c8ec5}</Project>
+      <Name>Avalonia.Animation.Shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Avalonia.Animation\Avalonia.Animation.csproj">
       <Project>{d211e587-d8bc-45b9-95a4-f297c8fa5200}</Project>
       <Name>Avalonia.Animation</Name>

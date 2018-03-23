@@ -1,14 +1,13 @@
 ﻿// Copyright (c) The Avalonia Project. All rights reserved.
 // Licensed under the MIT license. See licence.md file in the project root for full license information.
 
-using Avalonia.Metadata;
+using Avalonia.Collections;
 using System;
-using System.Reactive.Linq;
 
-namespace Avalonia.Animation
+namespace Avalonia.Animation.Transitions
 {
     /// <summary>
-    /// Interface for <see cref="Transition{T}"/> objects.
+    /// Interface for transition objects.
     /// </summary>
     public interface ITransition
     {
@@ -22,5 +21,13 @@ namespace Avalonia.Animation
         /// </summary>
         AvaloniaProperty Property { get; set; }
 
+    }
+
+    public class Transitions : AvaloniaList<ITransition>
+    {
+        public Transitions()
+        {
+            ResetBehavior = ResetBehavior.Remove;
+        }
     }
 }
