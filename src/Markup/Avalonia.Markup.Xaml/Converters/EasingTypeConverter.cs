@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See licence.md file in the project root for full license information.
 
 using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using System;
 using System.ComponentModel;
 using System.Globalization;
