@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 
-namespace Avalonia.Animation
+namespace Avalonia.Animation.Shared
 {
     /// <summary>
     /// Provides global timing functions for animations.

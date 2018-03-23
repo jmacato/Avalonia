@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Avalonia.Animation
+namespace Avalonia.Animation.Shared
 {
     /// <summary>
     /// Tracks the progress of an animation.

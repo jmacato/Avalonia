@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Avalonia.Animation
+namespace Avalonia.Animation.Shared
 {
     /// <summary>
     /// Defines animation extension methods.
